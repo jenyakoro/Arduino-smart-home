@@ -50,8 +50,8 @@ volatile unsigned long greenBlinkStart = 0;
 volatile unsigned long yellowBlinkStart = 0;
 volatile unsigned long redBlinkStart = 0;
 volatile unsigned long nightLightStart = 0;
-// volatile unsigned long nightLightTime = 1000L * 60 * 120;
-volatile unsigned long nightLightTime = 3000;
+unsigned long nightLightTime = 600L * 60 * 120;
+// unsigned long nightLightTime = 3000;
 
 int windowServoPin = 2;
 //int yellowLedPin = 3;
