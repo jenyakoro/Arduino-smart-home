@@ -1,0 +1,10 @@
+.pio
+.git
+.vscode/
+**/lib/**/examples
+**/lib/**/*.txt
+**/lib/**/*.adoc
+**/lib/**/*.md
+**/lib/**/LICENSE
+**/lib/**/COPYING
+**/README
