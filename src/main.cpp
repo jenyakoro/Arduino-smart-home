@@ -129,12 +129,12 @@ void switchBarrier() {
     if (currentAngle > 50) {
       for (int i = currentAngle; i > 0; i--) {
         barrierServo.write(i);
-        delay(20);
+        delay(10);
       }
     } else {
       for (int i = currentAngle; i < currentAngle + 90; i++) {
         barrierServo.write(i);
-        delay(20);
+        delay(10);
       }
     }
 
@@ -145,26 +145,26 @@ void switchBarrier() {
 }
 
 void checkMotionLight() {
-  if (!isTrafficEnabled) {
-    light = analogRead(PHOTOCELL_PIN);
-    if (light < 300) {
-      infrar = analogRead(MOTION_PIN);
-      if (infrar > 200) {
-       colorWipe(strip.Color(0, 0, 255)); // Blue
-      } else {
-       colorWipe(0);
-      }
-    } else if (light >= 300) {
-     colorWipe(0);
-    }
-  }
+  // if (!isTrafficEnabled) {
+  //   light = analogRead(PHOTOCELL_PIN);
+  //   if (light < 300) {
+  //     infrar = analogRead(MOTION_PIN);
+  //     if (infrar > 200) {
+  //      colorWipe(strip.Color(0, 0, 255)); // Blue
+  //     } else {
+  //      colorWipe(0);
+  //     }
+  //   } else if (light >= 300) {
+  //    colorWipe(0);
+  //   }
+  // }
 }
 
 void colorWipe(uint32_t c) {
   for (uint16_t i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
-    strip.show();
   }
+  strip.show();
 }
 
 void switchFan() {
