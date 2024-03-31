@@ -48,10 +48,10 @@ const int GREEN_PIN = 6;
 const int FAN_PIN = 7;
 const int FAN_PIN_2 = 8;
 const int RELAY_PIN = 9;
-const int NIGHT_LIGHT_BUTTON_PIN = 10;
 
 //analog pins
 const int PHOTOCELL_PIN = 1;
+const int NIGHT_LIGHT_BUTTON_PIN = 2;
 const int TRAFFIC_BUTTON_PIN = 3;
 const int FAN_BUTTON_PIN = 4;
 const int MOTION_PIN = 5;
@@ -69,8 +69,6 @@ void setup() {
 
   barrierServo.attach(BARRIES_SERVO_PIN);
   barrierServo.write(180);
-
-  pinMode(NIGHT_LIGHT_BUTTON_PIN, INPUT);
 
   pinMode(RELAY_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
@@ -92,7 +90,7 @@ void loop() {
 }
 
 void switchNightLight() {
-  if (digitalRead(NIGHT_LIGHT_BUTTON_PIN) == LOW && !isNightLightPushed) {
+  if (analogRead(NIGHT_LIGHT_BUTTON_PIN) < 100 && !isNightLightPushed) {
     isNightLightPushed = true;
     if (isNightLightOn) {
       printDebugMessage("Night light: OFF");
@@ -108,7 +106,7 @@ void switchNightLight() {
       mylcd.noBacklight();
     }
   }
-  if (digitalRead(NIGHT_LIGHT_BUTTON_PIN) != LOW && isNightLightPushed) {
+  if (analogRead(NIGHT_LIGHT_BUTTON_PIN) > 100 && isNightLightPushed) {
     isNightLightPushed = false;
   }
   if (isNightLightOn && millis() - nightLightStart > nightLightTime and digitalRead(RELAY_PIN) != LOW) {
@@ -240,6 +238,7 @@ void printWelcome() {
 
 void printSensors() {
   Serial.println("Analog sensors:");
+  printAnalogSensor(NIGHT_LIGHT_BUTTON_PIN, "  Night light button");
   printAnalogSensor(PHOTOCELL_PIN, "  Photocell sensor");
   printAnalogSensor(TRAFFIC_BUTTON_PIN, "  Left button");
   printAnalogSensor(FAN_BUTTON_PIN, "  Right button");
