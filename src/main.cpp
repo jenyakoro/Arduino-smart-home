@@ -19,6 +19,7 @@ void switchNightLight();
 void printDebugMessage(String message);
 void printAnalogSensor(int sensorPin, String message);
 void colorWipe(uint32_t c);
+void checkGarageLight();
 
 int infrar;
 int light;
@@ -35,6 +36,9 @@ bool isGreenNeedWork = false;
 bool isGreenOn = false;
 bool isYellowOn = false;
 bool isRedOn = false;
+bool isGarageLightEnabled = false;
+bool isMotionLightEnabled = false;
+unsigned long garageLightStart = 0;
 unsigned long greenBlinkStart = 0;
 unsigned long yellowBlinkStart = 0;
 unsigned long redBlinkStart = 0;
@@ -50,6 +54,10 @@ const int GREEN_PIN = 6;
 const int FAN_PIN = 7;
 const int FAN_PIN_2 = 8;
 const int RELAY_PIN = 9;
+const int GARAGE_LIGHT_PIN = 10;
+const int GARAGE_ROOM_LIGHT_PIN = 11;
+const int ECHO_PIN = 12;
+const int TRIG_PIN = 13;
 
 //analog pins
 const int BARRIER_BUTTON_PIN = 0;
@@ -78,6 +86,8 @@ void setup() {
   pinMode(RED_PIN, OUTPUT);
   pinMode(FAN_PIN, OUTPUT);
   pinMode(FAN_PIN_2, OUTPUT);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
 
   digitalWrite(FAN_PIN, LOW);
   digitalWrite(FAN_PIN_2, LOW);
@@ -90,6 +100,30 @@ void loop() {
   checkSerialInput();
   switchNightLight();
   switchBarrier();
+  checkGarageLight();
+}
+
+void checkGarageLight() {
+  int duration;
+  int distance;
+  digitalWrite(TRIG_PIN , HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN , LOW);
+  duration = pulseIn(ECHO_PIN, HIGH);
+  distance = (duration/2) / 28.5 ;
+  if (distance < 10 && !isGarageLightEnabled) {
+    isGarageLightEnabled = true;
+    garageLightStart = millis();
+    digitalWrite(GARAGE_LIGHT_PIN, HIGH);
+    digitalWrite(GARAGE_ROOM_LIGHT_PIN, HIGH);
+  } else if (distance > 25 && isGarageLightEnabled && (millis() - garageLightStart > 2000 || millis() < garageLightStart)) {
+    garageLightStart = 0;
+    isGarageLightEnabled = false;
+    digitalWrite(GARAGE_LIGHT_PIN, LOW);
+    digitalWrite(GARAGE_ROOM_LIGHT_PIN, LOW);   
+  } else if (isGarageLightEnabled and distance < 10) {
+    garageLightStart = millis();
+  }
 }
 
 void switchNightLight() {
@@ -101,10 +135,9 @@ void switchNightLight() {
       isNightLightOn = false;
       mylcd.backlight();
     } else {
+      printDebugMessage("Night light: ON");
       digitalWrite(RELAY_PIN, HIGH);
       nightLightStart = millis();
-      Serial.print("Night light ON in ");
-      Serial.println(nightLightStart);
       isNightLightOn = true;
       mylcd.noBacklight();
     }
@@ -112,9 +145,7 @@ void switchNightLight() {
   if (analogRead(NIGHT_LIGHT_BUTTON_PIN) > 100 && isNightLightPushed) {
     isNightLightPushed = false;
   }
-  if (isNightLightOn && millis() - nightLightStart > nightLightTime and digitalRead(RELAY_PIN) != LOW) {
-    Serial.print("Night light auto OFF in ");
-    Serial.println(millis());
+  if (isNightLightOn && digitalRead(RELAY_PIN) != LOW && (millis() - nightLightStart > nightLightTime || millis() < nightLightStart)) {
     // isNightLightOn = false;
     digitalWrite(RELAY_PIN, LOW);
   }
@@ -122,19 +153,18 @@ void switchNightLight() {
 }
 
 void switchBarrier() {
-
   if (analogRead(BARRIER_BUTTON_PIN) < 100 && !isBarrierPushed) {
     isBarrierPushed = true;
     int currentAngle = barrierServo.read();
     if (currentAngle > 50) {
       for (int i = currentAngle; i > 0; i--) {
         barrierServo.write(i);
-        delay(10);
+        delay(8);
       }
     } else {
       for (int i = currentAngle; i < currentAngle + 90; i++) {
         barrierServo.write(i);
-        delay(10);
+        delay(8);
       }
     }
 
@@ -145,19 +175,22 @@ void switchBarrier() {
 }
 
 void checkMotionLight() {
-  // if (!isTrafficEnabled) {
-  //   light = analogRead(PHOTOCELL_PIN);
-  //   if (light < 300) {
-  //     infrar = analogRead(MOTION_PIN);
-  //     if (infrar > 200) {
-  //      colorWipe(strip.Color(0, 0, 255)); // Blue
-  //     } else {
-  //      colorWipe(0);
-  //     }
-  //   } else if (light >= 300) {
-  //    colorWipe(0);
-  //   }
-  // }
+  if (!isTrafficEnabled) {
+    light = analogRead(PHOTOCELL_PIN);
+    if (light < 300) {
+      infrar = analogRead(MOTION_PIN);
+      if (infrar > 200 && !isMotionLightEnabled) {
+        colorWipe(strip.Color(0, 0, 255)); // Blue
+        isMotionLightEnabled = true;
+      } else if (infrar < 200 && isMotionLightEnabled) {
+        colorWipe(0);
+        isMotionLightEnabled = false;
+      }
+    } else if (light >= 300 && isMotionLightEnabled) {
+      colorWipe(0);
+      isMotionLightEnabled = false;
+    }
+  }
 }
 
 void colorWipe(uint32_t c) {
