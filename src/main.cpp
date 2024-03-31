@@ -13,6 +13,7 @@ void printWelcome();
 void checkMotionLight();
 void switchFan();
 void trafficLight();
+void switchBarrier();
 void checkSerialInput();
 void switchNightLight();
 void printDebugMessage(String message);
@@ -26,6 +27,7 @@ bool debugEnabled = false;
 int val;
 
 bool isNightLightPushed = false;
+bool isBarrierPushed = false;
 bool isNightLightOn = false;
 bool isTrafficButtonPushed = false;
 bool isTrafficEnabled = false;
@@ -50,6 +52,7 @@ const int FAN_PIN_2 = 8;
 const int RELAY_PIN = 9;
 
 //analog pins
+const int BARRIER_BUTTON_PIN = 0;
 const int PHOTOCELL_PIN = 1;
 const int NIGHT_LIGHT_BUTTON_PIN = 2;
 const int TRAFFIC_BUTTON_PIN = 3;
@@ -68,8 +71,7 @@ void setup() {
   printWelcome();
 
   barrierServo.attach(BARRIES_SERVO_PIN);
-  barrierServo.write(180);
-
+  
   pinMode(RELAY_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
   pinMode(YELLOW_PIN, OUTPUT);
@@ -87,6 +89,7 @@ void loop() {
   trafficLight();
   checkSerialInput();
   switchNightLight();
+  switchBarrier();
 }
 
 void switchNightLight() {
@@ -116,6 +119,29 @@ void switchNightLight() {
     digitalWrite(RELAY_PIN, LOW);
   }
 
+}
+
+void switchBarrier() {
+
+  if (analogRead(BARRIER_BUTTON_PIN) < 100 && !isBarrierPushed) {
+    isBarrierPushed = true;
+    int currentAngle = barrierServo.read();
+    if (currentAngle > 50) {
+      for (int i = currentAngle; i > 0; i--) {
+        barrierServo.write(i);
+        delay(20);
+      }
+    } else {
+      for (int i = currentAngle; i < currentAngle + 90; i++) {
+        barrierServo.write(i);
+        delay(20);
+      }
+    }
+
+  }
+  if (analogRead(BARRIER_BUTTON_PIN) > 100 && isBarrierPushed) {
+    isBarrierPushed = false;
+  }
 }
 
 void checkMotionLight() {
@@ -238,8 +264,9 @@ void printWelcome() {
 
 void printSensors() {
   Serial.println("Analog sensors:");
-  printAnalogSensor(NIGHT_LIGHT_BUTTON_PIN, "  Night light button");
+  printAnalogSensor(BARRIER_BUTTON_PIN, "  Barrier button");
   printAnalogSensor(PHOTOCELL_PIN, "  Photocell sensor");
+  printAnalogSensor(NIGHT_LIGHT_BUTTON_PIN, "  Night light button");
   printAnalogSensor(TRAFFIC_BUTTON_PIN, "  Left button");
   printAnalogSensor(FAN_BUTTON_PIN, "  Right button");
   printAnalogSensor(MOTION_PIN, "  Motion sensor");
@@ -262,6 +289,7 @@ void printDebugMessage(String message) {
 void checkSerialInput() {
   if (Serial.available() > 0) {
     val = Serial.read();  //set val to character read by serial
+    Serial.println(val);
   }
   switch (val) {
     case 'd':                  //if val is character 'c'，program will circulate
