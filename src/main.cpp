@@ -46,26 +46,26 @@ unsigned long nightLightStart = 0;
 unsigned long nightLightTime = 600L * 60 * 120; // 600L * 60 * 120 is about 2 hours
 
 //digital pins
-const int BARRIES_SERVO_PIN = 2;
-const int STRIP_PIN = 3;
 const int RED_PIN = 4;
 const int YELLOW_PIN = 5;
 const int GREEN_PIN = 6;
-const int FAN_PIN = 7;
-const int FAN_PIN_2 = 8;
+const int BARRIES_SERVO_PIN = 7;
+const int STRIP_PIN = 8;
 const int RELAY_PIN = 9;
 const int GARAGE_LIGHT_PIN = 10;
 const int GARAGE_ROOM_LIGHT_PIN = 11;
 const int ECHO_PIN = 12;
 const int TRIG_PIN = 13;
+const int FAN_PIN_2 = 14; // use analog pin as digital A0
+const int FAN_PIN = 15; // use analog pin as digital A1
 
 //analog pins
-const int BARRIER_BUTTON_PIN = 0;
-const int PHOTOCELL_PIN = 1;
 const int NIGHT_LIGHT_BUTTON_PIN = 2;
 const int TRAFFIC_BUTTON_PIN = 3;
 const int FAN_BUTTON_PIN = 4;
 const int MOTION_PIN = 5;
+const int BARRIER_BUTTON_PIN = 6;  // keyestudio super additional analog pin A6
+const int PHOTOCELL_PIN = 7; // keyestudio super additional analog pin A7
 
 String EMPTY = "                ";
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, STRIP_PIN, NEO_GRB + NEO_KHZ800);
@@ -162,7 +162,7 @@ void switchBarrier() {
         delay(8);
       }
     } else {
-      for (int i = currentAngle; i < currentAngle + 90; i++) {
+      for (int i = currentAngle; i < currentAngle + 100; i++) {
         barrierServo.write(i);
         delay(8);
       }
